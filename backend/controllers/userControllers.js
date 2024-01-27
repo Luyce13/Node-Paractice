@@ -30,10 +30,10 @@ const getProfileFromParams = asyncHandler(async (req, res) => {
         throw new Error('User Not Found')
     }
 })
-    
-const setProfile = asyncHandler(async (req, res) => {
-    const { name, email, password, age, location, hobbies } = req.body
-    if (!name || !email || !password || !age || !location || !hobbies){
+
+const registerUser = asyncHandler(async (req, res) => {
+    const { email, password } = req.body
+    if (!email || !password) {
         res.status(400)
         throw new Error('Please Enter All Fields')
     }
@@ -44,18 +44,30 @@ const setProfile = asyncHandler(async (req, res) => {
     }
     const salt = await bcrypt.genSalt(10)
     const hashedPassword = await bcrypt.hash(password, salt)
-    const user = await User.create({ name, email, password: hashedPassword, age, location, hobbies})
-    const token = generateToken(user.id);
+    const user = await User.create({ email, password: hashedPassword })
+    if (user) {
+        const token = generateToken(user.id);
 
-    // Return both user data and token in the response
-    res.status(200).json({
-        user,
-        token
-    });
+        // Return both user data and token in the response
+        res.status(200).json({
+            _id: user.id,
+            email: user.email,
+            token
+        })
+    } else {
+        res.status(400)
+        throw new Error('Invalid Data')
+    }
+
 })
 
+const getUser = asyncHandler(async (req, res) => {
+    const { id, email } = req.user
+    res.status(200).json({ _id: id,  email });
+});
+
 const generateToken = (id) => {
-    return jwt.sign({id}, process.env.JWT_SECRET, { expiresIn: '3d'})
+    return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: '3d' })
 }
 
-module.exports = {getProfileFromBody, getProfileFromParams, setProfile}
+module.exports = { registerUser, getUser }

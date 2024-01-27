@@ -1,8 +1,9 @@
 const express = require('express')
 const router = express.Router()
-const { getProfileFromBody, getProfileFromParams, setProfile } = require('../controllers/userControllers')
+const { registerUser, getUser } = require('../controllers/userControllers')
+const { protect } = require('../middleware/authMiddleware')
 
-router.route('/profile').post(setProfile).get(getProfileFromBody)
-router.get('/profile/:id', getProfileFromBody);
+router.post('/register', registerUser)
+router.get('/', protect, getUser)
 
 module.exports = router
